@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kinect Video Control</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f9;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    h1, h2 {
+      color: #555;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      margin-top: 30px;
+    }
+
+    button {
+      font-size: 1rem;
+      padding: 10px 20px;
+      margin: 10px;
+      color: #fff;
+      background-color: green;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button.recording {
+      background-color: red;
+    }
+
+    #camera-container {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    #camera-container img {
+      max-width: 400px;
+      height: auto;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    #status {
+      font-size: 1.5rem;
+      color: green;
+      margin-top: 10px;
+    }
+
+    .recording-text {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Kinect Video Control</h1>
+  <button id="record-button">Start Recording</button>
+  <div id="status">Status: Not Recording</div>
+
+  <h2>Kinect Camera Feed</h2>
+  <div id="camera-container">
+    <img id="depth-feed" src="" alt="Depth feed will appear here">
+    <img id="rgb-feed" src="" alt="RGB feed will appear here">
+  </div>
+
+  <script>
+    const BASE_URL = "http://localhost:8080";
+    let isRecording = false;
+  
+    document.addEventListener("DOMContentLoaded", () => {
+      const recordButton = document.getElementById("record-button");
+      const statusElement = document.getElementById("status");
+  
+      function setStatus(message, recording) {
+        statusElement.textContent = `Status: ${message}`;
+        if (recording) {
+          statusElement.classList.add("recording-text");
+        } else {
+          statusElement.classList.remove("recording-text");
+        }
+      }
+  
+      async function stopRecording() {
+        try {
+          const response = await fetch(`${BASE_URL}/stop`);
+          const result = await response.text();
+          console.log(result);
+  
+          const weight = prompt("Recording stopped. Please enter the pig's weight (in kg):");
+          if (weight) {
+            const weightData = {
+              weight: parseFloat(weight),
+            };
+  
+            // Send weight data to server
+            const saveResponse = await fetch(`${BASE_URL}/save`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(weightData),
+            });
+  
+            const saveResult = await saveResponse.text();
+            console.log(saveResult);
+          }
+        } catch (error) {
+          console.error("Error stopping recording or saving weight:", error);
+        }
+      }
+  
+      function toggleRecording() {
+        isRecording = !isRecording;
+  
+        if (isRecording) {
+          setStatus("Recording", true);
+          recordButton.textContent = "Stop Recording";
+          recordButton.classList.add("recording");
+          fetch(`${BASE_URL}/start`);
+        } else {
+          setStatus("Not Recording", false);
+          recordButton.textContent = "Start Recording";
+          recordButton.classList.remove("recording");
+          stopRecording();
+        }
+      }
+  
+      recordButton.addEventListener("click", toggleRecording);
+  
+      function updateKinectFeeds() {
+        const timestamp = new Date().getTime();
+        document.getElementById("depth-feed").src = `${BASE_URL}/camera?depth=true&ts=${timestamp}`;
+        document.getElementById("rgb-feed").src = `${BASE_URL}/camera?rgb=true&ts=${timestamp}`;
+      }
+  
+      setInterval(updateKinectFeeds, 100); // Update Kinect feeds every 100ms
+      updateKinectFeeds();
+    });
+  </script>
+  
+</body>
+</html>
