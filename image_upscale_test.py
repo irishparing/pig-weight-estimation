@@ -75,6 +75,6 @@ def process_images(input_folder, output_folder):
             process_subfolder(subdir, output_path / subdir.relative_to(input_path))
 
 if __name__ == "__main__":
-    input_folder = "C:\\Users\\USER\\Downloads\\Thesis\\Image Processing\\Jan 14 2025 - Batch 1\\background_remove_output_20250309"  # Change this to your actual path
-    output_folder = ".\\Jan 14 2025 - Batch 1\\image_upscale_output_20250309"
+    input_folder = ".\\Jan_14_2025-Batch1\\outputs_test"  # Change this to your actual path
+    output_folder = ".\\Jan_14_2025-Batch1\\background_remove_output_20250309"
     process_images(input_folder, output_folder)
